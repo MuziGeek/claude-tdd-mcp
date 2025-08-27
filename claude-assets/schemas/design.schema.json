@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Technical Design Schema", 
+  "description": "技术设计文档的结构化约束（最小子集）",
+  "type": "object",
+  "required": ["featureId", "components", "dataModels", "apis"],
+  "properties": {
+    "featureId": {
+      "type": "string",
+      "description": "对应的功能特性标识符",
+      "pattern": "^[A-Z0-9_-]+$"
+    },
+    "components": {
+      "type": "array",
+      "description": "系统组件列表",
+      "items": {
+        "type": "object",
+        "required": ["name", "responsibilities"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "组件名称",
+            "minLength": 2
+          },
+          "type": {
+            "type": "string",
+            "enum": ["controller", "service", "repository", "component", "utility", "gateway"],
+            "description": "组件类型"
+          },
+          "responsibilities": {
+            "type": "array",
+            "description": "组件职责",
+            "items": {
+              "type": "string",
+              "minLength": 10
+            },
+            "minItems": 1
+          },
+          "dependencies": {
+            "type": "array",
+            "description": "依赖的其他组件",
+            "items": {
+              "type": "string"
+            }
+          },
+          "interfaces": {
+            "type": "array",
+            "description": "暴露的接口",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "dataModels": {
+      "type": "array",
+      "description": "数据模型定义",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "模型名称"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["entity", "dto", "vo", "enum"],
+            "description": "模型类型"
+          },
+          "fields": {
+            "type": "array",
+            "description": "字段列表",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "properties": {
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "required": {"type": "boolean", "default": false},
+                "description": {"type": "string"}
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "description": "关系映射",
+            "items": {
+              "type": "object",
+              "required": ["target", "type"],
+              "properties": {
+                "target": {"type": "string"},
+                "type": {
+                  "type": "string",
+                  "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"]
+                },
+                "description": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "apis": {
+      "type": "array", 
+      "description": "API接口定义",
+      "items": {
+        "type": "object",
+        "required": ["path", "method", "summary"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "API路径",
+            "pattern": "^/.*"
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            "description": "HTTP方法"
+          },
+          "summary": {
+            "type": "string",
+            "description": "接口简要描述",
+            "minLength": 5
+          },
+          "requestSchema": {
+            "type": "object",
+            "description": "请求体结构"
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "响应体结构"
+          },
+          "errorCodes": {
+            "type": "array",
+            "description": "可能的错误码",
+            "items": {
+              "type": "object",
+              "required": ["code", "message"],
+              "properties": {
+                "code": {"type": "integer"},
+                "message": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "sequences": {
+      "type": "array",
+      "description": "时序图/流程定义",
+      "items": {
+        "type": "object",
+        "required": ["name", "steps"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "流程名称"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["happy-path", "error-path", "alternative"],
+            "description": "流程类型"
+          },
+          "steps": {
+            "type": "array",
+            "description": "流程步骤",
+            "items": {
+              "type": "object",
+              "required": ["actor", "action"],
+              "properties": {
+                "actor": {"type": "string"},
+                "action": {"type": "string"},
+                "result": {"type": "string"}
+              }
+            },
+            "minItems": 2
+          }
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "description": "可观测性设计",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "description": "日志策略",
+          "properties": {
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["ERROR", "WARN", "INFO", "DEBUG", "TRACE"]
+              }
+            },
+            "keyEvents": {
+              "type": "array",
+              "description": "关键事件日志点",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "description": "业务指标",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {"type": "string"},
+              "type": {
+                "type": "string", 
+                "enum": ["counter", "gauge", "histogram", "timer"]
+              },
+              "description": {"type": "string"}
+            }
+          }
+        },
+        "tracing": {
+          "type": "object",
+          "description": "链路追踪",
+          "properties": {
+            "spans": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "description": "安全设计考虑",
+      "properties": {
+        "authentication": {
+          "type": "string",
+          "description": "认证机制"
+        },
+        "authorization": {
+          "type": "string", 
+          "description": "授权策略"
+        },
+        "dataProtection": {
+          "type": "array",
+          "description": "数据保护措施",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Requirements Analysis Schema",
+  "description": "结构化需求分析文档的约束规范",
+  "type": "object",
+  "required": ["featureId", "goals", "scope", "userStories"],
+  "properties": {
+    "featureId": {
+      "type": "string",
+      "description": "功能特性的唯一标识符",
+      "pattern": "^[A-Z0-9_-]+$",
+      "examples": ["USER_AUTH", "TENANT_MGMT"]
+    },
+    "goals": {
+      "type": "array",
+      "description": "业务目标列表",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      },
+      "minItems": 1,
+      "maxItems": 10
+    },
+    "scope": {
+      "type": "object",
+      "description": "功能范围界定",
+      "required": ["in", "out"],
+      "properties": {
+        "in": {
+          "type": "array",
+          "description": "包含在范围内的功能点",
+          "items": {
+            "type": "string",
+            "minLength": 5
+          },
+          "minItems": 1
+        },
+        "out": {
+          "type": "array",
+          "description": "明确排除在范围外的功能点",
+          "items": {
+            "type": "string",
+            "minLength": 5
+          }
+        }
+      }
+    },
+    "userStories": {
+      "type": "array",
+      "description": "用户故事集合",
+      "items": {
+        "type": "object",
+        "required": ["id", "as", "iWant", "soThat", "acceptance"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "用户故事唯一标识",
+            "pattern": "^US[0-9]{3}$",
+            "examples": ["US001", "US042"]
+          },
+          "as": {
+            "type": "string",
+            "description": "用户角色",
+            "minLength": 2,
+            "examples": ["系统管理员", "普通用户", "租户管理员"]
+          },
+          "iWant": {
+            "type": "string",
+            "description": "期望功能",
+            "minLength": 10
+          },
+          "soThat": {
+            "type": "string",
+            "description": "价值原因",
+            "minLength": 10
+          },
+          "acceptance": {
+            "type": "array",
+            "description": "验收标准列表",
+            "items": {
+              "type": "string",
+              "minLength": 15
+            },
+            "minItems": 1
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["High", "Medium", "Low"],
+            "description": "优先级"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "nonFunctional": {
+      "type": "array",
+      "description": "非功能需求",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "criteria"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "非功能需求标识",
+            "pattern": "^NF[0-9]{3}$"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["performance", "security", "usability", "reliability", "scalability", "maintainability"],
+            "description": "非功能需求类型"
+          },
+          "criteria": {
+            "type": "string",
+            "description": "可度量的标准",
+            "minLength": 20
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["Must", "Should", "Could", "Won't"]
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "技术和业务约束",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      }
+    },
+    "risks": {
+      "type": "array",
+      "description": "风险识别",
+      "items": {
+        "type": "object",
+        "required": ["description", "impact", "probability"],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 15
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["Low", "Medium", "High", "Critical"]
+          },
+          "probability": {
+            "type": "string",
+            "enum": ["Low", "Medium", "High"]
+          },
+          "mitigation": {
+            "type": "string",
+            "description": "缓解措施"
+          }
+        }
+      }
+    },
+    "openQuestions": {
+      "type": "array",
+      "description": "待澄清问题",
+      "items": {
+        "type": "string",
+        "minLength": 10
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "依赖关系",
+      "items": {
+        "type": "object",
+        "required": ["type", "description"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["technical", "business", "external"]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10
+          },
+          "status": {
+            "type": "string",
+            "enum": ["resolved", "pending", "blocked"]
+          }
+        }
+      }
+    }
+  }
+}
