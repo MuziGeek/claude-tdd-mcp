@@ -1,0 +1,55 @@
+# Development files
+.claude/cache/
+.claude/settings.local.json
+*.log
+logs/
+.DS_Store
+Thumbs.db
+
+# Git and development
+.git/
+.gitignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# Testing
+test/
+tests/
+*.test.js
+*.spec.js
+coverage/
+.nyc_output
+
+# Documentation source (keep README.md)
+docs/
+*.md.backup
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Development dependencies and config
+.eslintrc*
+.prettierrc*
+.babelrc*
+nodemon.json
+
+# Temporary files
+.temp/
+.cache/
+*.tmp
+*.backup
+*.bak
+
+# OS generated files
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

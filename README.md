@@ -1,8 +1,41 @@
-# Claude TDD Scaffold v2.0
+# Claude TDD MCP v0.0.1
 
-专为Claude Code环境设计的TDD（测试驱动开发）脚手架工具，现在完全支持MCP（Model Context Protocol）服务集成。
+专为Claude Code环境设计的TDD（测试驱动开发）MCP服务器，提供完整的测试驱动开发工作流支持。
 
-## 🆕 v2.0新特性
+⚠️ **早期开发版本** - 此版本为实验性发布，API可能会发生变化
+
+## 📦 NPM安装
+
+```bash
+# 全局安装
+npm install -g claude-tdd-mcp
+
+# 或项目内安装
+npm install claude-tdd-mcp
+```
+
+## 🔧 Claude Code配置
+
+在Claude Code的MCP设置中添加：
+
+```json
+{
+  "mcpServers": {
+    "tdd": {
+      "command": "npx",
+      "args": ["claude-tdd-mcp"]
+    }
+  }
+}
+```
+
+## 📚 完整文档
+
+- 📖 [用户操作指南](docs/user-guide/USER-GUIDE.md) - 详细的使用说明和交互流程
+- ⚡ [快速开始指南](docs/user-guide/QUICK-START.md) - 30秒快速上手
+- 🔄 [TDD工作流详解](docs/user-guide/TDD-WORKFLOW.md) - 深入理解TDD三相位循环
+
+## 🆕 核心特性
 
 - ✅ **MCP服务支持** - 提供完整的MCP服务，可直接在Claude Code中使用
 - ✅ **双模式运行** - 支持CLI命令行和MCP工具两种使用方式
@@ -31,19 +64,53 @@
 - Node.js >= 16.0.0
 - Task Master AI MCP服务（可选但推荐）
 
-## 安装方式
+## 🚀 快速开始
 
-### 方式1：MCP服务安装（推荐）
+### 1. 安装MCP服务
 
 ```bash
-# 1. 克隆或下载项目
-git clone <repository-url> tdd-scaffold
-cd tdd-scaffold
+# 全局安装（推荐）
+npm install -g claude-tdd-mcp
+
+# 或项目内安装
+npm install claude-tdd-mcp
+```
+
+### 2. 配置Claude Code
+
+重启Claude Desktop使MCP配置生效。
+
+### 3. 开始使用
+
+在Claude Code中直接使用MCP工具：
+
+```javascript
+// 初始化TDD项目
+tdd_initialize({
+  projectRoot: "/path/to/your-project",
+  profile: "java-spring"
+})
+
+// 开始TDD循环
+tdd_switch_phase({
+  projectRoot: "/path/to/your-project", 
+  phase: "RED"
+})
+```
+
+## 安装方式
+
+### 方式2：从源码安装
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/yourusername/claude-tdd-scaffold.git
+cd claude-tdd-scaffold
 
 # 2. 安装依赖
 npm install
 
-# 3. 运行自动安装脚本
+# 3. 运行安装脚本
 node scripts/install-mcp.js
 ```
 

@@ -6,6 +6,10 @@ import { handleGetStatus, handleExportConfig, handleImportConfig } from './confi
 import { handleExportAnalysis, handleImportAnalysis, handleCompareAnalysis, handleApplyAnalysis } from './analysis.js';
 import { handleManageProfiles } from './profiles.js';
 import { handleSwitchPhase, handleGetTDDStatus, handleCreateFeature, handleCompletePhase, handleValidateFilePath } from './tdd-workflow.js';
+import { handleSmartCommand, handleListAliases, handleSmartHelp } from './smart-command.js';
+import { handleStartAutoTest, handleStopAutoTest, handleTriggerTest, handleGetTestResult, handleGetTestSuggestions, handleGetAutoTestStatus } from './auto-test.js';
+import { handleGetEnhancedStatus, handleGetStatusDashboard, handleGetContextTips, handleGetProjectHealth, handleGetProgressReport } from './status-display.js';
+import { handleAutoInitProject, handleDetectProject, handleGenerateConfigSuggestions, handleApplyRecommendedConfig, handleValidateProjectConfig, handleGetInitStatus } from './auto-init.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 const logger = createLogger('ToolRegistry');
@@ -14,9 +18,67 @@ const logger = createLogger('ToolRegistry');
  * MCP工具定义
  */
 const TOOL_DEFINITIONS = [
+  // 智能命令系统
+  {
+    name: 'tdd_smart_command',
+    description: '🤖 智能命令 - 使用自然语言或别名执行TDD操作 (推荐)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        },
+        input: {
+          type: 'string',
+          description: '自然语言输入或命令别名，如: "开发用户登录功能", "写测试", "red", "状态" 等'
+        }
+      },
+      required: ['projectRoot', 'input']
+    },
+    handler: async (args, sessionManager) => {
+      // 需要传递工具注册表实例
+      const toolRegistry = {
+        getTool: (name) => TOOL_DEFINITIONS.find(tool => tool.name === name)
+      };
+      return await handleSmartCommand(args, sessionManager, toolRegistry);
+    }
+  },
+
+  {
+    name: 'tdd_list_aliases',
+    description: '📋 显示所有可用的命令别名',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async (args, sessionManager) => {
+      const toolRegistry = {
+        getTool: (name) => TOOL_DEFINITIONS.find(tool => tool.name === name)
+      };
+      return await handleListAliases(args, sessionManager, toolRegistry);
+    }
+  },
+
+  {
+    name: 'tdd_smart_help',
+    description: '❓ 智能命令帮助 - 显示自然语言命令使用指南',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    handler: async (args, sessionManager) => {
+      const toolRegistry = {
+        getTool: (name) => TOOL_DEFINITIONS.find(tool => tool.name === name)
+      };
+      return await handleSmartHelp(args, sessionManager, toolRegistry);
+    }
+  },
   {
     name: 'tdd_initialize',
-    description: '在指定路径初始化TDD脚手架项目',
+    description: '🚀 初始化项目 - 在指定路径设置TDD脚手架环境',
     inputSchema: {
       type: 'object',
       properties: {
@@ -47,7 +109,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_scan_project',
-    description: '扫描并分析项目结构和特性',
+    description: '🔍 扫描项目 - 分析项目结构、代码特性和配置',
     inputSchema: {
       type: 'object',
       properties: {
@@ -68,7 +130,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_deep_analyze',
-    description: '深度分析项目特性，包括架构、测试策略、依赖和代码模式',
+    description: '🧠 深度分析 - 分析架构、测试策略、依赖关系和代码模式',
     inputSchema: {
       type: 'object',
       properties: {
@@ -84,7 +146,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_validate_env',
-    description: '验证Claude Code环境和TDD配置',
+    description: '✅ 环境验证 - 检查Claude Code环境和TDD配置状态',
     inputSchema: {
       type: 'object',
       properties: {
@@ -100,7 +162,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_get_status',
-    description: '获取当前TDD状态和会话信息',
+    description: '📊 状态查询 - 获取当前TDD状态和项目信息',
     inputSchema: {
       type: 'object',
       properties: {
@@ -116,7 +178,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_export_config',
-    description: '导出TDD项目配置',
+    description: '📤 导出配置 - 将当前项目的TDD配置导出为文件',
     inputSchema: {
       type: 'object',
       properties: {
@@ -136,7 +198,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_import_config',
-    description: '导入TDD项目配置',
+    description: '📥 导入配置 - 从配置文件导入TDD项目设置',
     inputSchema: {
       type: 'object',
       properties: {
@@ -161,7 +223,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_export_analysis',
-    description: '导出项目深度分析结果',
+    description: '📊 导出分析 - 导出项目深度分析结果和报告',
     inputSchema: {
       type: 'object',
       properties: {
@@ -181,7 +243,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_import_analysis',
-    description: '导入其他项目的分析结果',
+    description: '📥 导入分析 - 导入其他项目的分析结果进行参考',
     inputSchema: {
       type: 'object',
       properties: {
@@ -201,7 +263,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_compare_analysis',
-    description: '比较当前项目与导入的分析结果',
+    description: '🔀 对比分析 - 比较当前项目与其他项目的分析结果',
     inputSchema: {
       type: 'object',
       properties: {
@@ -217,7 +279,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_apply_analysis',
-    description: '将分析结果应用到TDD流程配置',
+    description: '🎯 应用分析 - 将分析结果应用到TDD流程和项目配置',
     inputSchema: {
       type: 'object',
       properties: {
@@ -248,7 +310,7 @@ const TOOL_DEFINITIONS = [
   
   {
     name: 'tdd_manage_profiles',
-    description: '管理项目配置模板',
+    description: '📋 模板管理 - 管理和操作项目配置模板',
     inputSchema: {
       type: 'object',
       properties: {
@@ -274,7 +336,7 @@ const TOOL_DEFINITIONS = [
   // TDD工作流工具
   {
     name: 'tdd_switch_phase',
-    description: '切换TDD阶段（RED/GREEN/REFACTOR）',
+    description: '🔄 阶段切换 - 切换TDD阶段 (🔴RED/🟢GREEN/🔧REFACTOR)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -315,7 +377,7 @@ const TOOL_DEFINITIONS = [
 
   {
     name: 'tdd_create_feature',
-    description: '创建新的TDD特性开发流程',
+    description: '🎯 创建功能 - 开始新功能的TDD开发流程',
     inputSchema: {
       type: 'object',
       properties: {
@@ -339,7 +401,7 @@ const TOOL_DEFINITIONS = [
 
   {
     name: 'tdd_complete_phase',
-    description: '完成当前TDD阶段',
+    description: '✅ 完成阶段 - 标记当前TDD阶段为完成并获取下一步建议',
     inputSchema: {
       type: 'object',
       properties: {
@@ -359,7 +421,7 @@ const TOOL_DEFINITIONS = [
 
   {
     name: 'tdd_validate_path',
-    description: '验证文件路径是否符合当前TDD阶段规则',
+    description: '🛡️ 路径验证 - 检查文件路径是否符合当前TDD阶段规则',
     inputSchema: {
       type: 'object',
       properties: {
@@ -375,6 +437,295 @@ const TOOL_DEFINITIONS = [
       required: ['projectRoot', 'filePath']
     },
     handler: handleValidateFilePath
+  },
+
+  // 自动测试工具
+  {
+    name: 'tdd_start_auto_test',
+    description: '🤖 启动自动测试 - 监听文件变更并智能运行测试',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleStartAutoTest
+  },
+
+  {
+    name: 'tdd_stop_auto_test',
+    description: '⏹️ 停止自动测试 - 停止文件监听和测试运行',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleStopAutoTest
+  },
+
+  {
+    name: 'tdd_trigger_test',
+    description: '▶️ 手动测试 - 立即触发测试运行',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleTriggerTest
+  },
+
+  {
+    name: 'tdd_get_test_result',
+    description: '📊 测试结果 - 获取最近的测试执行结果和历史',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetTestResult
+  },
+
+  {
+    name: 'tdd_get_test_suggestions',
+    description: '💡 测试建议 - 基于测试结果获取TDD阶段推进建议',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetTestSuggestions
+  },
+
+  {
+    name: 'tdd_auto_test_status',
+    description: '🔍 自动测试状态 - 查看自动测试监听和执行状态',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetAutoTestStatus
+  },
+
+  // 状态管理工具
+  {
+    name: 'tdd_enhanced_status',
+    description: '📊 增强状态 - 获取详细的TDD状态、进度和上下文信息',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetEnhancedStatus
+  },
+
+  {
+    name: 'tdd_status_dashboard',
+    description: '📈 状态仪表盘 - 获取全面的项目TDD仪表盘视图',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetStatusDashboard
+  },
+
+  {
+    name: 'tdd_context_tips',
+    description: '💡 上下文提示 - 获取基于当前状态的智能提示和建议',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetContextTips
+  },
+
+  {
+    name: 'tdd_project_health',
+    description: '🏥 项目健康 - 评估项目TDD实践的健康度和质量',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetProjectHealth
+  },
+
+  {
+    name: 'tdd_progress_report',
+    description: '📈 进度报告 - 获取详细的TDD开发进度和效率报告',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetProgressReport
+  },
+
+  // 零配置初始化工具
+  {
+    name: 'tdd_auto_init_project',
+    description: '🚀 零配置初始化 - 自动检测项目并生成最佳TDD配置',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleAutoInitProject
+  },
+
+  {
+    name: 'tdd_detect_project',
+    description: '🔍 项目检测 - 智能识别项目类型、框架和构建工具',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleDetectProject
+  },
+
+  {
+    name: 'tdd_config_suggestions',
+    description: '💡 配置建议 - 生成个性化的项目配置建议和优化方案',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGenerateConfigSuggestions
+  },
+
+  {
+    name: 'tdd_apply_config',
+    description: '⚙️ 应用配置 - 应用推荐的项目配置和目录结构',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        },
+        configOptions: {
+          type: 'object',
+          description: '自定义配置选项',
+          properties: {
+            commands: {
+              type: 'object',
+              description: '自定义命令配置'
+            },
+            patterns: {
+              type: 'object', 
+              description: '自定义文件模式配置'
+            }
+          }
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleApplyRecommendedConfig
+  },
+
+  {
+    name: 'tdd_validate_config',
+    description: '✅ 验证配置 - 检查项目配置有效性并给出改进建议',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleValidateProjectConfig
+  },
+
+  {
+    name: 'tdd_init_status',
+    description: '📊 初始化状态 - 检查项目初始化完成度和就绪状态',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        projectRoot: {
+          type: 'string',
+          description: '项目根目录的绝对路径'
+        }
+      },
+      required: ['projectRoot']
+    },
+    handler: handleGetInitStatus
   }
 ];
 
