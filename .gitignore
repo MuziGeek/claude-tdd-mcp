@@ -50,3 +50,7 @@ coverage/
 # Backup files
 *.bak
 *.backup
+
+# Test files
+test-*.js
+test-project/

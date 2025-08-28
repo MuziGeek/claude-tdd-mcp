@@ -1,9 +1,9 @@
 ---
 description: 进入TDD GREEN阶段，最小实现使测试通过
-allowed-tools: Bash(printf:*), Bash(node:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*), mcp__task-master-ai__*
+allowed-tools: tdd_switch_phase, tdd_run_test, Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*)
 ---
 
-!`bash -c 'TASK_ID="${1:-}"; node .claude/scripts/tdd-task-integration.js green "$TASK_ID"'`
+切换到TDD GREEN阶段，编写最小实现代码。
 
 ## 🟢 TDD GREEN 阶段
 
@@ -71,24 +71,24 @@ public class CustomerCategoryController {
 }
 ```
 
-#### Task Master集成
-- 保持任务状态为 `in-progress`
-- 记录实现文件到任务元数据
-- 更新测试通过率指标
+#### TDD状态管理
+- 自动切换到GREEN阶段
+- 限制只能编辑生产代码文件
+- 记录阶段变更和测试结果
 
 #### 验证步骤
 1. 实现最小代码
 2. 运行测试验证通过：`/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd test`
 3. 确认所有RED阶段测试都通过
 4. 不添加未经测试的额外功能
-5. 更新Task Master任务进度
+5. 记录GREEN阶段完成状态
 
 #### 完成标志
 - 所有RED阶段测试都通过
 - 代码实现最小且简洁
 - 没有添加未经测试的功能
-- 任务状态和测试指标已更新
-- 准备进入REFACTOR阶段：`/tm:refactor <task-id>`
+- TDD状态和测试指标已更新
+- 准备进入REFACTOR阶段：`/tdd:refactor`
 
 ---
-**TDD状态**: GREEN | 专注: 最小实现 | 下一步: `/tm:refactor <task-id>`
+**TDD状态**: GREEN | 专注: 最小实现 | 下一步: `/tdd:refactor`

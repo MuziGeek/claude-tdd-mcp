@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { glob } from 'glob';
 import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('ProjectDetector');
@@ -330,6 +329,7 @@ export class ProjectDetector {
 
       // 检查文件扩展名
       if (config.extensions) {
+        const { glob } = await import('glob');
         const files = await glob(`**/*{${config.extensions.join(',')}}`, {
           cwd: projectRoot,
           ignore: ['node_modules/**', 'target/**', 'build/**', '.git/**']
@@ -420,6 +420,7 @@ export class ProjectDetector {
       if (config.files) {
         for (const filePattern of config.files) {
           try {
+            const { glob } = await import('glob');
             const files = await glob(filePattern, {
               cwd: projectRoot,
               ignore: ['node_modules/**', 'target/**', 'build/**']
@@ -480,6 +481,7 @@ export class ProjectDetector {
         for (const filePattern of config.files) {
           try {
             if (filePattern.includes('*')) {
+              const { glob } = await import('glob');
               const files = await glob(filePattern, {
                 cwd: projectRoot,
                 maxDepth: 1
@@ -570,6 +572,7 @@ export class ProjectDetector {
       }
 
       // 统计文件数量评估复杂度
+      const { glob } = await import('glob');
       const allFiles = await glob('**/*', {
         cwd: projectRoot,
         ignore: ['node_modules/**', 'target/**', 'build/**', '.git/**'],

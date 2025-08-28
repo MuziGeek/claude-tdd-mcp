@@ -1,36 +1,48 @@
 #!/usr/bin/env node
 /**
- * tdd_guard.js - Enhanced with Task Master Integration
- * - PreToolUse：按阶段与 TDD 相位限制写入路径
- * - UserPromptSubmit：阻断"跳过测试/先实现"等反 TDD 指令
- * - Task Master集成：同步TDD状态和任务状态
- * 状态文件：.claude/cache/feature_state.json, .claude/cache/tdd_task_state.json
+ * tdd_guard.js - 纯TDD守护脚本
+ * - PreToolUse：按TDD阶段限制文件编辑权限
+ * - UserPromptSubmit：阻止反TDD指令和提醒正确流程
+ * 状态文件：.claude/tdd-state.json
  */
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 function readJSONSafe(file, fallback) {
-  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; }
+  try { 
+    return JSON.parse(fs.readFileSync(file, 'utf8')); 
+  } catch { 
+    return fallback; 
+  }
 }
 
 function writeJSONSafe(file, obj) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(obj, null, 2));
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(obj, null, 2));
+  } catch (error) {
+    // 静默失败，不影响主流程
+  }
 }
 
 const input = (() => {
-  try { return JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); } catch { return {}; }
+  try { 
+    return JSON.parse(fs.readFileSync(0, 'utf8') || '{}'); 
+  } catch { 
+    return {}; 
+  }
 })();
 
 const hook = input.hookEventName || input.event || '';
-const taskStateFile = '.claude/cache/tdd_task_state.json';
-const taskState = readJSONSafe(taskStateFile, null);
+const tddStateFile = '.claude/tdd-state.json';
+const tddState = readJSONSafe(tddStateFile, null);
 
-// 从Task State中获取当前TDD阶段，如果没有则默认允许所有操作
-const currentTDDPhase = taskState?.currentTask?.tddPhase || null;
+// 从TDD状态文件中获取当前TDD阶段
+const currentTDDPhase = tddState?.currentPhase?.toLowerCase() || null;
 
-function respond(obj) { process.stdout.write(JSON.stringify(obj)); }
+function respond(obj) { 
+  process.stdout.write(JSON.stringify(obj)); 
+}
 
 function normalizePath(p) {
   if (!p) return null;
@@ -38,94 +50,92 @@ function normalizePath(p) {
 }
 
 function isAllowedByTDDPhase(tddPhase, file) {
-  // 如果没有激活的TDD任务，允许所有操作
-  if (!tddPhase || tddPhase === 'ready') {
+  // 如果没有激活的TDD状态，允许所有操作
+  if (!tddPhase) {
     return { allowed: true };
   }
 
   const allowMap = {
-    red:      [/^tests\//, /^\.claude\//, /^\.taskmaster\//],
-    green:    [/^src\//, /^yichao-/, /^package\.json$/, /^pyproject\.toml$/, /^go\.mod$/, /^Cargo\.toml$/, /^pom\.xml$/, /^\.claude\//, /^\.taskmaster\//],
-    refactor: [/^src\//, /^yichao-/, /^docs\//, /^\.claude\//, /^\.taskmaster\//],
-    done:     [/^\.claude\//, /^\.taskmaster\//] // 完成阶段只能修改系统文件
+    red:      [/^tests\//, /^spec\//, /.*\.test\.(js|ts|java|py)$/, /.*\.spec\.(js|ts|java|py)$/, /.*Test\.java$/, /^test_.*\.py$/, /^\.claude\//],
+    green:    [/^src\//, /^lib\//, /^main\//, /^yichao-/, /^package\.json$/, /^pyproject\.toml$/, /^go\.mod$/, /^Cargo\.toml$/, /^pom\.xml$/, /^\.claude\//],
+    refactor: [/^src\//, /^lib\//, /^main\//, /^yichao-/, /^docs\//, /^README/, /^\.claude\//],
+    ready:    [/^\.claude\//] // READY阶段只能修改配置文件
   };
   
   const rules = allowMap[tddPhase] || [];
   
-  // Check if file matches allowed patterns
-  if (!rules.some(r => r.test(file))) {
-    return { 
-      allowed: false, 
-      reason: `TDD ${tddPhase.toUpperCase()} 阶段不允许修改此类文件: ${file}` 
-    };
+  const isAllowed = rules.some(rule => rule.test(file));
+  
+  if (isAllowed) {
+    return { allowed: true };
   }
   
-  return { allowed: true };
-}
-
-function preToolUse() {
-  // 兼容不同工具字段命名
-  const ti = input.toolInput || input.tool_input || {};
-  const file = normalizePath(ti.file_path || ti.path || ti.file || (Array.isArray(ti.files) ? ti.files[0] : null));
-  const deny = (reason) => respond({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason } });
-  const allow = (reason) => respond({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'allow', permissionDecisionReason: reason || 'ok' } });
-
-  // 没有文件目标：放行（例如仅运行 bash 检查）
-  if (!file) return allow('no-target-file');
-
-  // 系统配置文件始终允许
-  if (/^\.(claude|taskmaster)\//.test(file)) {
-    return allow('system-config-file');
-  }
-
-  // TDD阶段限制检查
-  const tddCheck = isAllowedByTDDPhase(currentTDDPhase, file);
-  if (!tddCheck.allowed) {
-    return deny(tddCheck.reason);
-  }
-
-  // 记录文件访问到Task Master任务状态
-  logFileAccess(file, 'access');
+  // 生成友好的错误消息
+  const phaseMessages = {
+    red: {
+      title: '🔴 RED阶段限制',
+      description: '当前处于TDD RED阶段，只能编辑测试文件',
+      allowed: '允许：tests/, spec/, *.test.*, *.spec.*, *Test.java, test_*.py',
+      suggestion: '请编写失败的测试用例，或使用 /tdd:green 切换到GREEN阶段'
+    },
+    green: {
+      title: '🟢 GREEN阶段限制',
+      description: '当前处于TDD GREEN阶段，只能编辑生产代码',
+      allowed: '允许：src/, lib/, main/, package.json, pom.xml 等',
+      suggestion: '请编写最小实现代码，或使用 /tdd:refactor 切换到重构阶段'
+    },
+    refactor: {
+      title: '🔧 REFACTOR阶段限制',
+      description: '当前处于TDD REFACTOR阶段，只能重构生产代码和文档',
+      allowed: '允许：src/, lib/, docs/, README',
+      suggestion: '请改进代码质量，保持测试通过'
+    },
+    ready: {
+      title: '⚪ READY阶段限制',
+      description: '当前处于READY阶段，只能修改配置文件',
+      allowed: '允许：.claude/ 目录',
+      suggestion: '使用 /tdd:red 开始TDD开发流程'
+    }
+  };
   
-  return allow(`stage=${state.stage}, tdd=${state.tdd}`);
+  const phaseMsg = phaseMessages[tddPhase] || {
+    title: '❓ 未知阶段',
+    description: `未知的TDD阶段: ${tddPhase}`,
+    allowed: '',
+    suggestion: '请使用 /tdd:red 开始TDD开发流程'
+  };
+  
+  return {
+    allowed: false,
+    title: phaseMsg.title,
+    description: phaseMsg.description,
+    suggestion: phaseMsg.suggestion,
+    allowed_patterns: phaseMsg.allowed
+  };
 }
 
-/**
- * 记录文件访问到Task Master任务状态
- */
-function logFileAccess(filePath, operation) {
-  try {
-    if (!taskState || !taskState.currentTask) return;
-    
-    const timestamp = new Date().toISOString();
-    const access = {
-      file: filePath,
-      operation: operation,
-      timestamp: timestamp,
-      phase: state.tdd || 'unknown'
-    };
-    
-    // 初始化访问历史
-    if (!taskState.currentTask.fileAccess) {
-      taskState.currentTask.fileAccess = [];
-    }
-    
-    // 避免重复记录相同文件的连续访问
-    const lastAccess = taskState.currentTask.fileAccess[taskState.currentTask.fileAccess.length - 1];
-    if (!lastAccess || lastAccess.file !== filePath || Date.now() - new Date(lastAccess.timestamp).getTime() > 1000) {
-      taskState.currentTask.fileAccess.push(access);
-      
-      // 限制历史记录数量
-      if (taskState.currentTask.fileAccess.length > 50) {
-        taskState.currentTask.fileAccess = taskState.currentTask.fileAccess.slice(-30);
-      }
-      
-      // 保存更新后的任务状态
-      writeJSONSafe(taskStateFile, taskState);
-    }
-  } catch (error) {
-    // 静默失败，不影响主流程
+function onPreToolUse() {
+  const toolName = input.toolName;
+  const filePath = normalizePath(input.args?.file_path || input.args?.path);
+  
+  if (!filePath) return respond({});
+  
+  // 只检查文件编辑相关的工具
+  const editTools = ['Edit', 'Write', 'MultiEdit'];
+  if (!editTools.includes(toolName)) {
+    return respond({});
   }
+  
+  const result = isAllowedByTDDPhase(currentTDDPhase, filePath);
+  
+  if (!result.allowed) {
+    return respond({
+      decision: 'block',
+      reason: `${result.title}\n\n${result.description}\n\n📁 ${result.allowed_patterns}\n\n💡 ${result.suggestion}`
+    });
+  }
+  
+  return respond({});
 }
 
 function onPrompt() {
@@ -133,51 +143,43 @@ function onPrompt() {
   if (!text) return respond({});
   
   // TDD反模式检测
-  if (/(跳过测试|先实现|直接实现|忽略测试|skip.?test|implement.?first|no.?test)/.test(text)) {
-    return respond({ decision: 'block', reason: 'TDD 策略：请先编写失败测试（RED）再实现。' });
-  }
+  const antiPatterns = [
+    /(跳过测试|skip.?test)/,
+    /(先实现|implement.?first)/,
+    /(直接实现|direct.?implement)/,
+    /(忽略测试|ignore.?test)/,
+    /(不写测试|no.?test)/,
+    /(测试后写|test.?later)/
+  ];
   
-  // Task Master集成命令检测
-  if (/(\/tm:|task-master|taskmaster)/.test(text)) {
-    logTaskMasterCommand(text);
+  for (const pattern of antiPatterns) {
+    if (pattern.test(text)) {
+      const suggestions = {
+        red: '🔴 请先在RED阶段编写失败测试',
+        green: '🟢 请在GREEN阶段编写最小实现',
+        refactor: '🔧 请在REFACTOR阶段改进代码质量',
+      };
+      
+      const currentSuggestion = suggestions[currentTDDPhase] || '⚪ 请使用 /tdd:red 开始TDD流程';
+      
+      return respond({ 
+        decision: 'block', 
+        reason: `🚫 TDD守护：检测到反TDD模式\n\n${currentSuggestion}\n\n📚 TDD三法则：\n1. 只有在失败测试存在时才写生产代码\n2. 只写刚好能失败的测试\n3. 只写刚好能通过测试的生产代码` 
+      });
+    }
   }
   
   return respond({});
 }
 
-/**
- * 记录Task Master命令使用
- */
-function logTaskMasterCommand(text) {
-  try {
-    if (!taskState || !taskState.currentTask) return;
-    
-    const timestamp = new Date().toISOString();
-    const command = {
-      text: text.substring(0, 100), // 限制长度
-      timestamp: timestamp,
-      phase: currentTDDPhase || 'unknown'
-    };
-    
-    // 初始化命令历史
-    if (!taskState.currentTask.commandHistory) {
-      taskState.currentTask.commandHistory = [];
-    }
-    
-    taskState.currentTask.commandHistory.push(command);
-    
-    // 限制历史记录数量
-    if (taskState.currentTask.commandHistory.length > 20) {
-      taskState.currentTask.commandHistory = taskState.currentTask.commandHistory.slice(-10);
-    }
-    
-    // 保存更新
-    writeJSONSafe(taskStateFile, taskState);
-  } catch (error) {
-    // 静默失败
-  }
+// 路由到对应的处理函数
+switch (hook) {
+  case 'PreToolUse':
+    onPreToolUse();
+    break;
+  case 'UserPromptSubmit':
+    onPrompt();
+    break;
+  default:
+    respond({});
 }
-
-if (hook === 'PreToolUse') preToolUse();
-else if (hook === 'UserPromptSubmit') onPrompt();
-else respond({});

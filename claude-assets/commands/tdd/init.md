@@ -1,44 +1,51 @@
 ---
-description: 初始化TDD任务，将Task Master任务转换为TDD工作流
-allowed-tools: Bash(printf:*), Bash(node:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), mcp__task-master-ai__*
+description: 初始化TDD项目环境
+allowed-tools: tdd_init_project, tdd_smart_command
 ---
 
-## 🚀 初始化TDD任务
+## 🚀 初始化TDD项目
 
 ### 功能说明
-将指定的Task Master任务转换为TDD工作流，自动生成设计、红绿重构四个阶段的子任务。
+初始化TDD开发环境，检测项目类型并设置完整的TDD开发流程。
 
 ### 使用方法
 ```bash
-/tm:init <task-id>
+/tdd:init
 ```
 
-### 参数说明
-- `task-id`: Task Master中的任务ID（必需）
+或者使用智能命令：
+- "初始化TDD项目"
+- "设置TDD环境"
+- "开始 TDD 开发"
 
 ### 执行逻辑
 
-!`bash -c 'TASK_ID="${1:-}"; if [ -z "$TASK_ID" ]; then echo "❌ 错误：必须提供任务ID"; echo "用法: /tm:init <task-id>"; exit 1; fi; echo "🚀 正在初始化TDD任务 #$TASK_ID..."; node .claude/scripts/tdd-task-integration.js init "$TASK_ID" && echo "✅ TDD任务初始化完成！" || echo "❌ TDD任务初始化失败"'`
+自动执行初始化流程：
+1. 检测项目类型（Java/Node.js/Python）
+2. 创建 TDD 配置和状态文件
+3. 设置项目结构和测试命令
+4. 配置 TDD 阶段规则
 
 ### 执行结果
-- 为指定任务创建4个TDD子任务：
-  - `[DESIGN]` - 需求分析和技术设计
-  - `[RED]` - 编写失败测试
-  - `[GREEN]` - 最小实现
-  - `[REFACTOR]` - 重构优化
-- 创建TDD任务状态文件
-- 设置任务间依赖关系
+- 创建 `.claude/settings.json` - TDD 配置文件
+- 创建 `.claude/tdd-state.json` - TDD 状态跟踪
+- 设置 TDD 三阶段规则：
+  - `RED` - 编写失败测试
+  - `GREEN` - 最小实现
+  - `REFACTOR` - 重构优化
+- 配置项目特定的测试命令
 
 ### 示例
 ```bash
-/tm:init 1
+/tdd:init
 ```
-这将为任务#1创建完整的TDD工作流子任务。
+这将为当前项目创建完整的TDD开发环境。
 
 ### 注意事项
-- 任务ID必须存在于Task Master中
-- 如果任务已有子任务，TDD子任务将追加到现有子任务列表
-- 初始化后可使用 `/tm:design`, `/tm:red`, `/tm:green`, `/tm:refactor` 进入各个阶段
+- 必须在项目根目录中执行
+- 支持自动检测 Java、Node.js、Python 项目
+- 初始化后可使用 `/tdd:red`、`/tdd:green`、`/tdd:refactor` 进入各个阶段
+- 支持智能命令进行 TDD 阶段管理
 
 ---
-**下一步**: 使用 `/tm:design <task-id>` 开始需求分析和技术设计阶段
+**下一步**: 使用 `/tdd:red` 开始TDD开发的第一个阶段

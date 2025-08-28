@@ -51,7 +51,7 @@ mvn --version
 **步骤1**：在项目目录中执行
 ```bash
 cd /path/to/your-project
-npx @claude-tdd/scaffold quick-start
+npx claude-tdd-mcp init --profile=auto
 ```
 
 **自动化流程**：
@@ -88,12 +88,13 @@ npx @claude-tdd/scaffold quick-start
 **步骤1**：项目初始化
 ```bash
 cd /path/to/your-project
-npx @claude-tdd/scaffold init --profile=java-spring
+npx claude-tdd-mcp init --profile=java-spring
 ```
 
 **步骤2**：配置MCP服务
 ```bash
-npx @claude-tdd/scaffold setup-mcp
+# MCP服务会在初始化时自动配置
+# 或手动配置Claude Desktop
 ```
 
 **步骤3**：重启Claude Desktop
@@ -102,10 +103,10 @@ npx @claude-tdd/scaffold setup-mcp
 
 ```bash
 # 全局安装
-npm install -g @claude-tdd/scaffold
+npm install -g claude-tdd-mcp
 
 # 之后可直接使用
-claude-tdd quick-start
+claude-tdd-mcp init /path/to/project
 ```
 
 ## Claude Code中的TDD开发流程
@@ -116,33 +117,44 @@ claude-tdd quick-start
 ```
 用户: "列出可用的TDD工具"
 
-Claude回应:
-📋 可用的Claude TDD脚手架MCP工具：
+Claude会自动调用 tdd_list_aliases()，返回:
+📋 Claude TDD MCP工具 (v0.0.7)
 
-🛠 项目管理工具:
+🤖 **智能命令系统** (推荐使用):
+- tdd_smart_command - 使用自然语言或别名执行TDD操作
+- tdd_list_aliases - 显示所有可用命令别名  
+- tdd_smart_help - 获取智能命令使用帮助
+
+🛠 **项目管理工具**:
 - tdd_initialize - 初始化TDD项目
+- tdd_auto_init_project - 零配置智能初始化
 - tdd_scan_project - 扫描项目结构
 - tdd_deep_analyze - 深度分析项目
 - tdd_validate_env - 验证环境配置
+- tdd_detect_project - 智能检测项目类型
 
-🔄 TDD工作流工具:
+🔄 **TDD工作流工具**:
 - tdd_switch_phase - 切换TDD阶段
 - tdd_create_feature - 创建新特性
 - tdd_complete_phase - 完成当前阶段
 - tdd_validate_path - 验证文件路径
 
-⚙️ 配置管理工具:
-- tdd_export_config - 导出项目配置
-- tdd_import_config - 导入项目配置
+🤖 **自动测试工具**:
+- tdd_start_auto_test - 启动自动测试监听
+- tdd_stop_auto_test - 停止自动测试
+- tdd_trigger_test - 手动触发测试
+
+📊 **状态和分析工具**:
+- tdd_enhanced_status - 增强状态信息
+- tdd_project_health - 项目健康度检查
+- tdd_status_dashboard - 状态仪表盘
+
+⚙️ **配置管理工具**:
+- tdd_export_config / tdd_import_config - 配置导入导出
+- tdd_config_suggestions - 智能配置建议
 - tdd_manage_profiles - 管理配置模板
 
-📊 分析工具:
-- tdd_export_analysis - 导出分析结果
-- tdd_import_analysis - 导入分析结果
-- tdd_compare_analysis - 比较分析结果
-- tdd_apply_analysis - 应用分析结果
-
-🚀 MCP服务运行正常，可以开始TDD开发！
+💡 **快速开始建议**: 使用 tdd_smart_command({input: "帮我初始化项目"}) 开始！
 ```
 
 ### 项目状态查看

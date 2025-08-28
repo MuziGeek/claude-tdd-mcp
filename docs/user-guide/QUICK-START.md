@@ -7,7 +7,7 @@
 ```bash
 # 在项目目录中执行一个命令即可完成所有配置
 cd your-project
-npx @claude-tdd/scaffold quick-start
+npx claude-tdd-mcp init --profile=auto
 ```
 
 ### 重启Claude Desktop
@@ -40,19 +40,19 @@ npx @claude-tdd/scaffold quick-start
 
 **选项A: 一键配置（推荐）**
 ```bash
-npx @claude-tdd/scaffold quick-start
+npx claude-tdd-mcp init --profile=auto
 ```
 
 **选项B: 分步配置**
 ```bash
-npx @claude-tdd/scaffold init --profile=java-spring
-npx @claude-tdd/scaffold setup-mcp
+npx claude-tdd-mcp init --profile=java-spring
+# MCP配置会自动完成
 ```
 
 **选项C: 全局安装**
 ```bash
-npm install -g @claude-tdd/scaffold
-claude-tdd quick-start
+npm install -g claude-tdd-mcp
+claude-tdd-mcp init /path/to/project
 ```
 
 ### 步骤3: 重启Claude Desktop（30秒）
@@ -66,7 +66,7 @@ claude-tdd quick-start
 "列出TDD工具"
 ```
 
-如果看到17个TDD工具列表，说明安装成功！
+如果看到Claude TDD MCP工具列表，说明安装成功！
 
 ### 步骤5: 开始TDD开发（立即开始）
 
@@ -162,8 +162,17 @@ public class Calculator {
 ### MCP工具命令（在Claude Code中使用）
 
 ```javascript
+// 🤖 智能命令（推荐使用）
+tdd_smart_command({
+  projectRoot: "/path/to/project",
+  input: "初始化项目"  // 或 "开始TDD", "red", "状态" 等
+})
+
 // 查看项目状态
 tdd_get_status({ projectRoot: "/path/to/project" })
+
+// 零配置初始化
+tdd_auto_init_project({ projectRoot: "/path/to/project" })
 
 // 创建新功能
 tdd_create_feature({ 
@@ -186,14 +195,14 @@ tdd_deep_analyze({ projectRoot: "/path/to/project" })
 
 ```bash
 # 查看帮助
-npx @claude-tdd/scaffold --help
-
-# 重新配置
-npx @claude-tdd/scaffold setup-mcp
+npx claude-tdd-mcp --help
 
 # 初始化不同类型项目
-npx @claude-tdd/scaffold init --profile=node-express
-npx @claude-tdd/scaffold init --profile=python-django
+npx claude-tdd-mcp init --profile=node-express
+npx claude-tdd-mcp init --profile=python-django
+
+# 检测项目类型
+npx claude-tdd-mcp detect /path/to/project
 ```
 
 ---
@@ -217,8 +226,8 @@ npx @claude-tdd/scaffold init --profile=python-django
 **解决**：
 ```bash
 # 1. 重启Claude Desktop
-# 2. 检查配置
-npx @claude-tdd/scaffold setup-mcp
+# 2. 重新安装全局包
+npm install -g claude-tdd-mcp
 ```
 
 ### 问题：TDD阶段切换失败

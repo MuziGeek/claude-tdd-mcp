@@ -40,15 +40,16 @@ class Logger {
    * 输出日志
    */
   log(level, message, ...args) {
+    // 在MCP环境中，所有日志都输出到stderr以避免干扰stdio通信
     if (level >= this.level) {
       const formattedMessage = this.formatMessage(level, message);
       
-      if (level >= LogLevel.ERROR) {
-        console.error(formattedMessage, ...args);
-      } else if (level >= LogLevel.WARN) {
-        console.warn(formattedMessage, ...args);
-      } else {
-        console.log(formattedMessage, ...args);
+      // 所有日志都输出到stderr，保持stdout清洁用于MCP通信
+      process.stderr.write(formattedMessage + '\n');
+      if (args.length > 0) {
+        process.stderr.write(args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ') + '\n');
       }
     }
   }

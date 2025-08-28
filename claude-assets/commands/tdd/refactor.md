@@ -1,9 +1,9 @@
 ---
 description: 进入TDD REFACTOR阶段，重构和优化代码
-allowed-tools: Bash(printf:*), Bash(node:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*), mcp__task-master-ai__*
+allowed-tools: tdd_switch_phase, tdd_run_test, Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*)
 ---
 
-!`bash -c 'TASK_ID="${1:-}"; node .claude/scripts/tdd-task-integration.js refactor "$TASK_ID"'`
+切换到TDD REFACTOR阶段，开始重构和优化代码。
 
 ## 🔄 TDD REFACTOR 阶段
 
@@ -90,10 +90,10 @@ private CustomerCategoryDO convertToEntity(CustomerCategoryCreateReqVO createReq
 }
 ```
 
-#### Task Master集成
-- 更新任务状态为 `review`
-- 记录重构改进到任务历史
-- 更新代码质量指标
+#### TDD状态管理
+- 自动切换到REFACTOR阶段
+- 允许编辑所有生产代码和文档
+- 记录重构过程和测试结果
 
 #### 验证步骤
 1. 进行渐进式重构
@@ -101,20 +101,19 @@ private CustomerCategoryDO convertToEntity(CustomerCategoryCreateReqVO createReq
 3. 确保所有测试持续通过
 4. 运行代码质量检查
 5. 更新设计文档和注释
-6. 完成后标记任务为完成
+6. 完成后记录REFACTOR阶段状态
 
 #### 完成标志
 - 代码质量显著提升
 - 所有测试依然通过
 - 代码符合项目规范
 - 文档已更新
-- 任务状态更新为 `done`
+- TDD状态更新为REFACTOR完成
 
 #### 最终步骤
-```bash
-# 标记任务完成
-/tm:done <task-id>
-```
+完成REFACTOR阶段后，可以：
+- 开始下一个功能的TDD循环
+- 或者继续为当前功能添加更多测试
 
 ---
-**TDD状态**: REFACTOR | 专注: 质量优化 | 下一步: `/tm:done <task-id>`
+**TDD状态**: REFACTOR | 专注: 质量优化 | 下一步: 完成当前循环

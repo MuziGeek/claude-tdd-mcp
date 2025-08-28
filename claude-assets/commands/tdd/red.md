@@ -1,9 +1,9 @@
 ---
 description: 进入TDD RED阶段，编写失败的测试
-allowed-tools: Bash(printf:*), Bash(node:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*), mcp__task-master-ai__*
+allowed-tools: tdd_switch_phase, tdd_run_test, Bash(/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd:*)
 ---
 
-!`bash -c 'TASK_ID="${1:-}"; node .claude/scripts/tdd-task-integration.js red "$TASK_ID"'`
+切换到TDD RED阶段，开始编写失败测试。
 
 ## 🔴 TDD RED 阶段
 
@@ -17,10 +17,10 @@ allowed-tools: Bash(printf:*), Bash(node:*), Bash(git status:*), Bash(git add:*)
 > 请 **tdd-architect** 子代理执行以下任务：
 
 #### 目标  
-基于Task Master任务描述和已有的需求分析/技术设计文档，编写**会失败**的自动化测试代码。
+基于当前功能需求和已有的设计文档，编写**会失败**的自动化测试代码。
 
 #### 输入来源
-- Task Master任务详情和描述
+- 功能需求和用户故事
 - 已存在的设计文档 (如果有)
 - 项目现有代码结构和模式
 
@@ -62,22 +62,22 @@ class CustomerCategoryServiceTest {
 }
 ```
 
-#### Task Master集成
-- 自动更新任务状态为 `in-progress`
-- 记录测试文件到任务元数据
-- 跟踪测试指标
+#### TDD状态管理
+- 自动切换到RED阶段
+- 限制只能编辑测试文件
+- 记录阶段变更历史
 
 #### 验证步骤
 1. 生成测试代码
 2. 运行测试确保失败：`/mnt/d/CodeSoft/apache-maven-3.9.11/bin/mvn.cmd test`
 3. 确认失败原因是"方法/类不存在"或"返回null/默认值"
-4. 更新Task Master任务进度
+4. 记录RED阶段完成状态
 
 #### 完成标志
 - 所有测试用例都有对应的自动化测试
 - 测试运行失败，失败原因明确
-- 任务状态已同步到Task Master
-- 准备进入GREEN阶段：`/tm:green <task-id>`
+- TDD状态记录RED阶段完成
+- 准备进入GREEN阶段：`/tdd:green`
 
 ---
-**TDD状态**: RED | 专注: 编写失败的测试 | 下一步: `/tm:green <task-id>`
+**TDD状态**: RED | 专注: 编写失败的测试 | 下一步: `/tdd:green`

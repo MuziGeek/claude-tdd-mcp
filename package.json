@@ -1,11 +1,11 @@
 {
   "name": "claude-tdd-mcp",
-  "version": "0.0.1",
-  "description": "TDD Model Context Protocol server for Claude Code - Early Development",
+  "version": "0.1.0",
+  "description": "Lightweight TDD MCP Server with Multi-Feature Workflow Management for Claude Code",
   "main": "mcp-server/index.js",
   "type": "module",
   "bin": {
-    "claude-tdd-mcp": "./mcp-server/index.js"
+    "claude-tdd-mcp": "./bin/claude-tdd-mcp.mjs"
   },
   "scripts": {
     "start": "node mcp-server/index.js",
@@ -17,23 +17,25 @@
     "claude-code",
     "test-driven-development",
     "scaffold",
-    "task-master",
     "mcp",
     "model-context-protocol"
   ],
   "author": "Claude TDD Team",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=16.0.0",
+    "pnpm": ">=8.0.0"
   },
+  "packageManager": "pnpm@10.13.1",
   "files": [
+    "bin/",
     "mcp-server/",
     "claude-assets/",
     "scripts/",
     "README.md"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0",
+    "@modelcontextprotocol/sdk": "^1.17.4",
     "fs-extra": "^11.1.1",
     "inquirer": "^8.2.5",
     "chokidar": "^3.5.3",

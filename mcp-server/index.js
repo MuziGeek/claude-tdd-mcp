@@ -12,7 +12,7 @@ import { registerResources } from './resources/index.js';
 import { SessionManager } from './state/session-manager.js';
 import { LogLevel, createLogger } from './utils/logger.js';
 
-// 创建日志器
+// 创建日志器 - 设置为INFO级别以显示执行过程
 const logger = createLogger('TDD-Scaffold-MCP', LogLevel.INFO);
 
 /**
@@ -72,6 +72,7 @@ class TDDScaffoldMCPServer {
   setupErrorHandlers() {
     this.server.onerror = (error) => {
       logger.error('MCP服务器错误:', error);
+      logger.error('错误详情:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     };
 
     process.on('uncaughtException', (error) => {
@@ -137,11 +138,21 @@ class TDDScaffoldMCPServer {
 const server = new TDDScaffoldMCPServer();
 
 // 如果直接运行此文件，启动服务器
-if (import.meta.url === `file://${process.argv[1]}`) {
-  server.start().catch(error => {
-    console.error('启动服务器失败:', error);
+async function main() {
+  try {
+    await server.start();
+  } catch (error) {
+    logger.error('启动服务器失败:', error);
     process.exit(1);
-  });
+  }
+}
+
+// 检查是否直接运行
+const isDirectRun = import.meta.url === `file://${process.argv[1]}` || 
+                    process.argv[1]?.includes('claude-tdd-mcp');
+
+if (isDirectRun) {
+  main();
 }
 
 export default server;

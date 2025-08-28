@@ -1,10 +1,10 @@
-import { createLogger } from '../utils/logger.js';
+import { createLogger, LogLevel } from '../utils/logger.js';
 import { getProjectProfiles } from './project-profiles.js';
 import { getTDDTemplates } from './tdd-templates.js';
 import { getAnalysisCache } from './analysis-cache.js';
 import { ListResourcesRequestSchema, ReadResourceRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-const logger = createLogger('ResourceRegistry');
+const logger = createLogger('ResourceRegistry', LogLevel.ERROR);
 
 /**
  * MCP资源定义
